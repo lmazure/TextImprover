@@ -13,7 +13,18 @@ public class TextImprover {
         String chat(String userMessage);
     }
 
+    record Input(String sysPrompt, String userPrompt) {}
+
     public static void main(final String[] args) {
+        final Input input = parseCommandLine(args);
+
+        final SystemMessage systemPrompt = new SystemMessage(input.sysPrompt);
+
+        final String answerWithName = perform(systemPrompt, input.userPrompt);
+        System.out.println(answerWithName);
+    }
+
+    private static Input parseCommandLine(final String[] args) {
         String sysPrompt = "You are a helpful assistant.";
         String userPrompt = "Hello, how are you?";
         for (int i = 0; i < args.length; i++) {
@@ -24,25 +35,24 @@ public class TextImprover {
                 }
                 sysPrompt = args[i + 1];
                 i++;
-            } else if (args[i].equals("--user-prompt-string")) {
+                continue;
+            }
+            if (args[i].equals("--user-prompt-string")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --user-prompt-string");
                     displayHelpAndExit(1);
                 }
                 userPrompt = args[i + 1];
                 i++;
-            } else if (args[i].equals("--help")) {
-                displayHelpAndExit(0);
-            } else {
-                System.err.println("Unknown argument: " + args[i]);
-                displayHelpAndExit(1);
+                continue;
             }
+            if (args[i].equals("--help")) {
+                displayHelpAndExit(0);
+            }
+            System.err.println("Unknown argument: " + args[i]);
+            displayHelpAndExit(1);
         }
-
-        final SystemMessage systemPrompt = new SystemMessage(sysPrompt);
-
-        final String answerWithName = perform(systemPrompt, userPrompt);
-        System.out.println(answerWithName);
+        return new Input(sysPrompt, userPrompt);
     }
 
     private static void displayHelpAndExit(final int exitCode) {
