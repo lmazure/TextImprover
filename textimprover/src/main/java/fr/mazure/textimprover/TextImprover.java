@@ -13,6 +13,7 @@ public class TextImprover {
     public static final int SUCCESS = 0;
     public static final int INVALID_COMMAND_LINE = 1;
     public static final int FILE_NOT_FOUND = 2;
+    public static final int MODEL_ERROR = 3;
     
     interface Assistant {
         String chat(String userMessage);
@@ -42,7 +43,13 @@ public class TextImprover {
                                               .chatMemory(memory)
                                               .build();
 
-        final String answerWithName = assistant.chat(message);
-        return answerWithName;
+        try {
+            return assistant.chat(message);
+        } catch (final RuntimeException e) {
+            System.err.println("Model failure");
+            e.printStackTrace();
+            System.exit(MODEL_ERROR);
+            return null;
+        }
     }
 }
