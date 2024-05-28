@@ -1,8 +1,9 @@
 package fr.mazure.textimprover;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 
 import dev.langchain4j.data.message.SystemMessage;
@@ -23,27 +24,45 @@ public class TextImprover {
     }
 
     public static void main(final String[] args) {
-        final CommandLine.Input input = CommandLine.parseCommandLine(args);
+        final CommandLine.Input parameters = CommandLine.parseCommandLine(args);
 
-        final Optional<SystemMessage> systemPrompt = input.sysPrompt().map(SystemMessage::new);
-
-        final String answerWithName = perform(systemPrompt, input.userPrompt());
-
-        if (input.outputFile().isPresent()) {
+        PrintStream output = System.out;
+        if (parameters.outputFile().isPresent()) {
             try {
-                Files.writeString(Paths.get(input.outputFile().get()), answerWithName);
+                output = new PrintStream(Files.newOutputStream(parameters.outputFile().get(), StandardOpenOption.CREATE_NEW));
             } catch (final IOException e) {
-                System.err.println("Error: Unable to write file: " + input.outputFile().get());
+                System.err.println("Error: Unable to write output file: " + parameters.outputFile().get().toString());
                 System.exit(FILE_ERROR);
             }
-        } else {
-            System.out.println(answerWithName);
+        }
+
+        PrintStream error = System.err;
+        if (parameters.errorFile().isPresent()) {
+            try {
+                error = new PrintStream(Files.newOutputStream(parameters.errorFile().get(), StandardOpenOption.CREATE_NEW));
+            } catch (final IOException e) {
+                System.err.println("Error: Unable to write error file: " + parameters.errorFile().get().toString());
+                System.exit(FILE_ERROR);
+            }
+        }
+
+        final Optional<SystemMessage> systemPrompt = parameters.sysPrompt().map(SystemMessage::new);
+
+        final String answerWithName = perform(systemPrompt, parameters.userPrompt(), error);
+
+        output.println(answerWithName);
+
+        if (output != System.out) {
+            output.close();
+        }
+        if (error != System.err) {
+            error.close();
         }
     }
 
-
     private static String perform(final Optional<SystemMessage> systemPrompt,
-                                  final String message) {
+                                  final String message,
+                                  final PrintStream error) {
         final OpenAiChatModel model = OpenAiChatModel.withApiKey("demo");
         final ChatMemory memory = MessageWindowChatMemory.withMaxMessages(2);
 
@@ -59,8 +78,8 @@ public class TextImprover {
         try {
             return assistant.chat(message);
         } catch (final RuntimeException e) {
-            System.err.println("Model failure");
-            e.printStackTrace();
+            error.println("Model failure");
+            e.printStackTrace(error);
             System.exit(MODEL_ERROR);
             return null;
         }

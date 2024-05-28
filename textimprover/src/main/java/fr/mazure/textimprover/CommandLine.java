@@ -2,18 +2,20 @@ package fr.mazure.textimprover;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
 
 public class CommandLine {
     
-    public record Input(Optional<String> sysPrompt, String userPrompt, Optional<String> outputFile) {}
+    public record Input(Optional<String> sysPrompt, String userPrompt, Optional<Path> outputFile, Optional<Path> errorFile) {}
 
     public static Input parseCommandLine(final String[] args) {
         String sysPrompt = null;
         String userPrompt = null;
-        String outputFile = null;
+        Path outputFile = null;
+        Path errorFile = null;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--system-prompt-string")) {
                 if ((i + 1 ) >= args.length) {
@@ -50,7 +52,7 @@ public class CommandLine {
                     System.err.println("System prompt already set");
                     System.exit(TextImprover.INVALID_COMMAND_LINE);
                 }
-                sysPrompt = slurpFile(args[i + 1]);
+                sysPrompt = slurpFile(Paths.get(args[i + 1]));
                 i++;
                 continue;
             }
@@ -63,7 +65,7 @@ public class CommandLine {
                     System.err.println("User prompt already set");
                     displayHelpAndExit(i);
                 }
-                userPrompt = slurpFile(args[i + 1]);
+                userPrompt = slurpFile(Paths.get( args[i + 1]));
                 i++;
                 continue;
             }
@@ -72,7 +74,16 @@ public class CommandLine {
                     System.err.println("Missing argument for --output-file");
                     System.exit(TextImprover.INVALID_COMMAND_LINE);
                 }
-                outputFile = args[i + 1];
+                outputFile = Paths.get(args[i + 1]);
+                i++;
+                continue;
+            }
+            if (args[i].equals("--error-file")) {
+                if ((i + 1 ) >= args.length) {
+                    System.err.println("Missing argument for --error-file");
+                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                }
+                errorFile = Paths.get(args[i + 1]);
                 i++;
                 continue;
             }
@@ -86,7 +97,7 @@ public class CommandLine {
             System.err.println("Missing user prompt");
             displayHelpAndExit(1);
         }
-        return new Input(Optional.ofNullable(sysPrompt), userPrompt, Optional.ofNullable(outputFile));
+        return new Input(Optional.ofNullable(sysPrompt), userPrompt, Optional.ofNullable(outputFile), Optional.ofNullable(errorFile));
     }
 
     private static void displayHelpAndExit(final int exitCode) {
@@ -101,15 +112,16 @@ public class CommandLine {
             --user-prompt-string <user-prompt-string>     user prompt as a string
             --user-prompt-file <user-prompt-file>         user prompt as the content of a file
             --output-file output-file>                    output file (stdout by default)
+            --error-file error-file>                      error file (stderr by default)
             --help
             """
         );
         System.exit(exitCode);
     }
 
-    private static String slurpFile(final String path)  {
+    private static String slurpFile(final Path path)  {
         try {
-            return Files.readString(Paths.get(path));
+            return Files.readString(path);
         }
         catch (final IOException e) {
             System.err.println("Error: Unable to read file: " + path);
