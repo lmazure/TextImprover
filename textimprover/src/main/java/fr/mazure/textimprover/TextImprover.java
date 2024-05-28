@@ -1,5 +1,8 @@
 package fr.mazure.textimprover;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Optional;
 
 import dev.langchain4j.data.message.SystemMessage;
@@ -12,7 +15,7 @@ public class TextImprover {
 
     public static final int SUCCESS = 0;
     public static final int INVALID_COMMAND_LINE = 1;
-    public static final int FILE_NOT_FOUND = 2;
+    public static final int FILE_ERROR = 2;
     public static final int MODEL_ERROR = 3;
     
     interface Assistant {
@@ -25,7 +28,17 @@ public class TextImprover {
         final Optional<SystemMessage> systemPrompt = input.sysPrompt().map(SystemMessage::new);
 
         final String answerWithName = perform(systemPrompt, input.userPrompt());
-        System.out.println(answerWithName);
+
+        if (input.outputFile().isPresent()) {
+            try {
+                Files.writeString(Paths.get(input.outputFile().get()), answerWithName);
+            } catch (final IOException e) {
+                System.err.println("Error: Unable to write file: " + input.outputFile().get());
+                System.exit(FILE_ERROR);
+            }
+        } else {
+            System.out.println(answerWithName);
+        }
     }
 
 

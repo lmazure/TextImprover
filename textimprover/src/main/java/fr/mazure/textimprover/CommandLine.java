@@ -8,11 +8,12 @@ import java.util.Optional;
 
 public class CommandLine {
     
-    public record Input(Optional<String> sysPrompt, String userPrompt) {}
+    public record Input(Optional<String> sysPrompt, String userPrompt, Optional<String> outputFile) {}
 
     public static Input parseCommandLine(final String[] args) {
         String sysPrompt = null;
         String userPrompt = null;
+        String outputFile = null;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--system-prompt-string")) {
                 if ((i + 1 ) >= args.length) {
@@ -66,6 +67,15 @@ public class CommandLine {
                 i++;
                 continue;
             }
+            if (args[i].equals("--output-file")) {
+                if ((i + 1 ) >= args.length) {
+                    System.err.println("Missing argument for --output-file");
+                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                }
+                outputFile = args[i + 1];
+                i++;
+                continue;
+            }
             if (args[i].equals("--help")) {
                 System.exit(TextImprover.SUCCESS);
             }
@@ -76,7 +86,7 @@ public class CommandLine {
             System.err.println("Missing user prompt");
             displayHelpAndExit(1);
         }
-        return new Input(Optional.ofNullable(sysPrompt), userPrompt);
+        return new Input(Optional.ofNullable(sysPrompt), userPrompt, Optional.ofNullable(outputFile));
     }
 
     private static void displayHelpAndExit(final int exitCode) {
@@ -90,6 +100,7 @@ public class CommandLine {
             --system-prompt-file <system-prompt-file>     system prompt as the content of a file
             --user-prompt-string <user-prompt-string>     user prompt as a string
             --user-prompt-file <user-prompt-file>         user prompt as the content of a file
+            --output-file output-file>                    output file (stdout by default)
             --help
             """
         );
@@ -102,7 +113,7 @@ public class CommandLine {
         }
         catch (final IOException e) {
             System.err.println("Error: Unable to read file: " + path);
-            System.exit(TextImprover.FILE_NOT_FOUND);
+            System.exit(TextImprover.FILE_ERROR);
             return null;
         }
     }
