@@ -17,24 +17,24 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>22</maven.compiler.source>
     <maven.compiler.target>22</maven.compiler.target>
-    <langchain4j-open-ai.version>0.31.0</langchain4j-open-ai.version>
+    <langchain4j.version>0.31.0</langchain4j.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>dev.langchain4j</groupId>
       <artifactId>langchain4j-open-ai</artifactId>
-      <version>${langchain4j-open-ai.version}</version>
+      <version>${langchain4j.version}</version>
     </dependency>
     <dependency>
       <groupId>dev.langchain4j</groupId>
       <artifactId>langchain4j</artifactId>
-      <version>${langchain4j-open-ai.version}</version>
+      <version>${langchain4j.version}</version>
     </dependency>
     <dependency>
       <groupId>dev.langchain4j</groupId>
       <artifactId>langchain4j-embeddings-all-minilm-l6-v2</artifactId>
-      <version>${langchain4j-open-ai.version}</version>
+      <version>${langchain4j.version}</version>
     </dependency>
     <dependency>
       <groupId>junit</groupId>
