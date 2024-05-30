@@ -9,7 +9,9 @@ import java.util.Optional;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
-import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.huggingface.HuggingFaceChatModel;
+//import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.service.AiServices;
 
 public class TextImprover {
@@ -63,7 +65,17 @@ public class TextImprover {
     private static String perform(final Optional<SystemMessage> systemPrompt,
                                   final String message,
                                   final PrintStream error) {
-        final OpenAiChatModel model = OpenAiChatModel.withApiKey("demo");
+        //final ChatLanguageModel model = OpenAiChatModel.withApiKey("demo");
+        final String token = System.getenv("HUGGINGFACEHUB_API_TOKEN");
+        if (token == null) {
+            System.err.println("Error: HUGGINGFACEHUB_API_TOKEN environment variable is not set.");
+            System.exit(INVALID_COMMAND_LINE);
+        }
+        final ChatLanguageModel model = HuggingFaceChatModel.builder()
+                                                            .accessToken(token)
+                                                            .modelId("mistralai/Mistral-7B-Instruct-v0.3")
+                                                            .maxNewTokens(512)
+                                                            .build();
         final ChatMemory memory = MessageWindowChatMemory.withMaxMessages(2);
 
         if (systemPrompt.isPresent()) {
