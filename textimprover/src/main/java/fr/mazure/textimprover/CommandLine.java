@@ -9,13 +9,20 @@ import java.util.Optional;
 
 public class CommandLine {
     
-    public record Input(Optional<String> sysPrompt, String userPrompt, Optional<Path> outputFile, Optional<Path> errorFile) {}
+    public record Parameters(Optional<String> sysPrompt,
+                             String userPrompt,
+                             Optional<Path> outputFile,
+                             Optional<Path> errorFile,
+                             Optional<String> model,
+                             Optional<String> apiKey) {}
 
-    public static Input parseCommandLine(final String[] args) {
+    public static Parameters parseCommandLine(final String[] args) {
         String sysPrompt = null;
         String userPrompt = null;
         Path outputFile = null;
         Path errorFile = null;
+        String model = null;
+        String apiKey = null;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--system-prompt-string")) {
                 if ((i + 1 ) >= args.length) {
@@ -87,6 +94,24 @@ public class CommandLine {
                 i++;
                 continue;
             }
+            if (args[i].equals("--model")) {
+                if ((i + 1 ) >= args.length) {
+                    System.err.println("Missing argument for --model");
+                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                }
+                model = args[i + 1];
+                i++;
+                continue;
+            }
+            if (args[i].equals("--api-key")) {
+                if ((i + 1 ) >= args.length) {
+                    System.err.println("Missing argument for --api-key");
+                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                }
+                apiKey = args[i + 1];
+                i++;
+                continue;
+            }
             if (args[i].equals("--help")) {
                 System.exit(TextImprover.SUCCESS);
             }
@@ -97,14 +122,16 @@ public class CommandLine {
             System.err.println("Missing user prompt");
             displayHelpAndExit(1);
         }
-        return new Input(Optional.ofNullable(sysPrompt), userPrompt, Optional.ofNullable(outputFile), Optional.ofNullable(errorFile));
+        return new Parameters(Optional.ofNullable(sysPrompt), userPrompt, Optional.ofNullable(outputFile), Optional.ofNullable(errorFile), Optional.ofNullable(model), Optional.ofNullable(apiKey));
     }
 
     private static void displayHelpAndExit(final int exitCode) {
         final String executableName = "textimprover.jar";
         System.err.println("Usage: java -jar " +
                            executableName +
-                           " {--user-prompt-string <user-prompt-string>|--user-prompt-file <user-prompt-file>} [--system-prompt-string <system-prompt-string>]  [--system-prompt-file <system-prompt-file>] [--help]");
+                           " {--user-prompt-string <user-prompt-string>|--user-prompt-file <user-prompt-file>}\n" +
+                           "    [--system-prompt-string <system-prompt-string>]  [--system-prompt-file <system-prompt-file>]\n" +
+                           "    [--model <model>] [--api-key <api-key>] [--help]");
         System.err.println(
             """
             --system-prompt-string <system-prompt-string> system prompt as a string
@@ -113,6 +140,8 @@ public class CommandLine {
             --user-prompt-file <user-prompt-file>         user prompt as the content of a file
             --output-file output-file>                    output file (stdout by default)
             --error-file error-file>                      error file (stderr by default)
+            --model <model>                               model name
+            --api-key <api-key>                           api key
             --help
             """
         );

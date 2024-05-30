@@ -26,7 +26,7 @@ public class TextImprover {
     }
 
     public static void main(final String[] args) {
-        final CommandLine.Input parameters = CommandLine.parseCommandLine(args);
+        final CommandLine.Parameters parameters = CommandLine.parseCommandLine(args);
 
         PrintStream output = System.out;
         if (parameters.outputFile().isPresent()) {
@@ -50,7 +50,7 @@ public class TextImprover {
 
         final Optional<SystemMessage> systemPrompt = parameters.sysPrompt().map(SystemMessage::new);
 
-        final String answerWithName = perform(systemPrompt, parameters.userPrompt(), error);
+        final String answerWithName = perform(systemPrompt, parameters.userPrompt(), error, parameters.model(), parameters.apiKey());
 
         output.println(answerWithName);
 
@@ -64,17 +64,14 @@ public class TextImprover {
 
     private static String perform(final Optional<SystemMessage> systemPrompt,
                                   final String message,
-                                  final PrintStream error) {
+                                  final PrintStream error,
+                                  final Optional<String> modelName,
+                                  final Optional<String> apiKey) {
         //final ChatLanguageModel model = OpenAiChatModel.withApiKey("demo");
-        final String token = System.getenv("HUGGINGFACEHUB_API_TOKEN");
-        if (token == null) {
-            System.err.println("Error: HUGGINGFACEHUB_API_TOKEN environment variable is not set.");
-            System.exit(INVALID_COMMAND_LINE);
-        }
         final ChatLanguageModel model = HuggingFaceChatModel.builder()
-                                                            .accessToken(token)
-                                                            .modelId("mistralai/Mistral-7B-Instruct-v0.3")
-                                                            .maxNewTokens(512)
+                                                            .accessToken(apiKey.get())
+                                                            .modelId(modelName.get())
+                                                            .maxNewTokens(1024)
                                                             .build();
         final ChatMemory memory = MessageWindowChatMemory.withMaxMessages(2);
 
