@@ -12,6 +12,7 @@ import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.huggingface.HuggingFaceChatModel;
 import dev.langchain4j.model.mistralai.MistralAiChatModel;
+import dev.langchain4j.model.mistralai.MistralAiChatModel.MistralAiChatModelBuilder;
 import dev.langchain4j.service.AiServices;
 
 public class TextImprover {
@@ -45,7 +46,7 @@ public class TextImprover {
 
         final Optional<SystemMessage> systemPrompt = parameters.sysPrompt().map(SystemMessage::new);
 
-        final String answerWithName = perform(systemPrompt, parameters.userPrompt(), error, parameters.provider(), parameters.model(), parameters.apiKey());
+        final String answerWithName = perform(systemPrompt, parameters.userPrompt(), error, parameters.provider(), parameters.model(), parameters.apiKey(), parameters.temperature(), parameters.seed());
 
         output.println(answerWithName);
 
@@ -62,12 +63,14 @@ public class TextImprover {
                                   final PrintStream error,
                                   final Provider provider,
                                   final Optional<String> modelName,
-                                  final Optional<String> apiKey) {
+                                  final Optional<String> apiKey,
+                                  final Optional<Double> temperature,
+                                  final Optional<Integer> seed) {
 
         final ChatLanguageModel model =
             switch (provider) {
-                case Provider.HUGGING_FACE -> buildHuggingFaceChatModel(modelName.get(), apiKey.get());
-                case Provider.MISTRAL_AI -> buildMistralAiChatModel(modelName.get(), apiKey.get());
+                case Provider.HUGGING_FACE -> buildHuggingFaceChatModel(modelName, apiKey, temperature);
+                case Provider.MISTRAL_AI -> buildMistralAiChatModel(modelName, apiKey, temperature, seed);
             };
         
         final ChatMemory memory = MessageWindowChatMemory.withMaxMessages(2);
@@ -91,20 +94,42 @@ public class TextImprover {
         }
     }
 
-    private static ChatLanguageModel buildHuggingFaceChatModel(final String modelName,
-                                                               final String apiKey) {
-        return HuggingFaceChatModel.builder()
-                                   .accessToken(apiKey)
-                                   .modelId(modelName)
-                                   .maxNewTokens(2048)
-                                   .build();
+    private static ChatLanguageModel buildHuggingFaceChatModel(final Optional<String> modelName,
+                                                               final Optional<String> apiKey,
+                                                               final Optional<Double> temperature) {
+        final HuggingFaceChatModel.Builder builder = HuggingFaceChatModel.builder();
+        if (apiKey.isPresent()) {
+            builder.accessToken(apiKey.get());
+        }
+        if (modelName.isPresent()) {
+            builder.modelId(modelName.get());
+        }
+        if (temperature.isPresent()) {
+            builder.temperature(temperature.get());
+        }
+        return builder.maxNewTokens(2048)  // TODO remove this
+                      .build();
     }
 
-    private static ChatLanguageModel buildMistralAiChatModel(final String modelName,
-                                                             final String apiKey) {
-        return MistralAiChatModel.builder()
-                                 .apiKey(apiKey)
-                                 .modelName(modelName)
-                                 .build();
+    private static ChatLanguageModel buildMistralAiChatModel(final Optional<String> modelName,
+                                                             final Optional<String> apiKey,
+                                                             final Optional<Double> temperature,
+                                                             final Optional<Integer> seed) {
+        final MistralAiChatModelBuilder builder = MistralAiChatModel.builder();
+
+        if (apiKey.isPresent()) {
+            builder.apiKey(apiKey.get());
+        }
+        if (modelName.isPresent()) {
+            builder.modelName(modelName.get());
+        }
+        if (temperature.isPresent()) {  
+            builder.temperature(temperature.get());
+        }
+        if (seed.isPresent()) {
+            builder.randomSeed(seed.get());
+        }
+
+        return builder.build();
     }
 }

@@ -17,7 +17,9 @@ public class CommandLine {
                              Optional<Path> errorFile,
                              Provider provider,
                              Optional<String> model,
-                             Optional<String> apiKey) {}
+                             Optional<String> apiKey,
+                             Optional<Double> temperature,
+                             Optional<Integer> seed) {}
 
     public static Parameters parseCommandLine(final String[] args) {
         String sysPrompt = null;
@@ -27,6 +29,8 @@ public class CommandLine {
         Provider provider = null;
         String model = null;
         String apiKey = null;
+        Double temperature = null;
+        Integer seed = null;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--system-prompt-string")) {
                 if ((i + 1 ) >= args.length) {
@@ -130,6 +134,34 @@ public class CommandLine {
                 i++;
                 continue;
             }
+            if (args[i].equals("--temperature")) {
+                if ((i + 1 ) >= args.length) {
+                    System.err.println("Missing argument for --temperature");
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
+                }
+                try {
+                    temperature = Double.parseDouble(args[i + 1]);
+                } catch (final NumberFormatException e) {
+                    System.err.println("Invalid temperature: " + args[i + 1]);
+                    displayHelpAndExit(1);
+                }
+                i++;
+                continue;
+            }
+            if (args[i].equals("--seed")) {
+                if ((i + 1 ) >= args.length) {
+                    System.err.println("Missing argument for --seed");
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
+                }
+                try {
+                    seed = Integer.parseInt(args[i + 1]);
+                } catch (final NumberFormatException e) {
+                    System.err.println("Invalid seed: " + args[i + 1]);
+                    displayHelpAndExit(1);
+                }
+                i++;
+                continue;
+            }
             if (args[i].equals("--help")) {
                 System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
             }
@@ -144,7 +176,15 @@ public class CommandLine {
             System.err.println("Missing provider");
             displayHelpAndExit(1);
         }
-        return new Parameters(Optional.ofNullable(sysPrompt), userPrompt, Optional.ofNullable(outputFile), Optional.ofNullable(errorFile), provider, Optional.ofNullable(model), Optional.ofNullable(apiKey));
+        return new Parameters(Optional.ofNullable(sysPrompt),
+                              userPrompt,
+                              Optional.ofNullable(outputFile),
+                              Optional.ofNullable(errorFile),
+                              provider,
+                              Optional.ofNullable(model),
+                              Optional.ofNullable(apiKey),
+                              Optional.ofNullable(temperature),
+                              Optional.ofNullable(seed));
     }
 
     private static void displayHelpAndExit(final int exitCode) {
@@ -165,6 +205,8 @@ public class CommandLine {
             --provider <provider>                         provider
             --model <model>                               model name
             --api-key <api-key>                           api key
+            --temperature <temperature>                   temperature
+            --seed <seed>                                 random seed
             --help
             """
         );
