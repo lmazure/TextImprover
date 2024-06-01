@@ -15,7 +15,7 @@ public class CommandLine {
                              String userPrompt,
                              Optional<Path> outputFile,
                              Optional<Path> errorFile,
-                             TextImprover.Provider provider,
+                             Provider provider,
                              Optional<String> model,
                              Optional<String> apiKey) {}
 
@@ -24,18 +24,18 @@ public class CommandLine {
         String userPrompt = null;
         Path outputFile = null;
         Path errorFile = null;
-        TextImprover.Provider provider = null;
+        Provider provider = null;
         String model = null;
         String apiKey = null;
         for (int i = 0; i < args.length; i++) {
             if (args[i].equals("--system-prompt-string")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --system-prompt-string");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 if (Objects.nonNull(sysPrompt)) {
                     System.err.println("System prompt already set");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 sysPrompt = args[i + 1];
                 i++;
@@ -44,11 +44,11 @@ public class CommandLine {
             if (args[i].equals("--user-prompt-string")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --user-prompt-string");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 if (Objects.nonNull(userPrompt)) {
                     System.err.println("User prompt already set");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 userPrompt = args[i + 1];
                 i++;
@@ -57,11 +57,11 @@ public class CommandLine {
             if (args[i].equals("--system-prompt-file")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --system-prompt-file");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 if (Objects.nonNull(sysPrompt)) {
                     System.err.println("System prompt already set");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 sysPrompt = slurpFile(Paths.get(args[i + 1]));
                 i++;
@@ -70,7 +70,7 @@ public class CommandLine {
             if (args[i].equals("--user-prompt-file")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --user-prompt-file");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 if (Objects.nonNull(userPrompt)) {
                     System.err.println("User prompt already set");
@@ -83,7 +83,7 @@ public class CommandLine {
             if (args[i].equals("--output-file")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --output-file");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 outputFile = Paths.get(args[i + 1]);
                 i++;
@@ -92,7 +92,7 @@ public class CommandLine {
             if (args[i].equals("--error-file")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --error-file");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 errorFile = Paths.get(args[i + 1]);
                 i++;
@@ -101,10 +101,10 @@ public class CommandLine {
             if (args[i].equals("--provider")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --provider");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 try {
-                    provider = TextImprover.Provider.fromString(args[i + 1]);
+                    provider = Provider.fromString(args[i + 1]);
                 } catch (final IllegalArgumentException e) {
                     System.err.println("Unknown provider: " + args[i + 1]);
                     displayHelpAndExit(1);
@@ -115,7 +115,7 @@ public class CommandLine {
             if (args[i].equals("--model")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --model");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 model = args[i + 1];
                 i++;
@@ -124,14 +124,14 @@ public class CommandLine {
             if (args[i].equals("--api-key")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --api-key");
-                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 apiKey = args[i + 1];
                 i++;
                 continue;
             }
             if (args[i].equals("--help")) {
-                System.exit(TextImprover.SUCCESS);
+                System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
             }
             System.err.println("Unknown argument: " + args[i]);
             displayHelpAndExit(1);
@@ -168,7 +168,7 @@ public class CommandLine {
             --help
             """
         );
-        System.err.println("Available providers: " + Arrays.stream(TextImprover.Provider.values()).map(Enum::toString).collect(Collectors.joining(", ")));
+        System.err.println("Available providers: " + Arrays.stream(Provider.values()).map(Enum::toString).collect(Collectors.joining(", ")));
         // TODO add temperature, maxtokens, randomseed
         System.exit(exitCode);
     }
@@ -179,7 +179,7 @@ public class CommandLine {
         }
         catch (final IOException e) {
             System.err.println("Error: Unable to read file: " + path);
-            System.exit(TextImprover.FILE_ERROR);
+            System.exit(ExitCode.FILE_ERROR.getCode());
             return null;
         }
     }

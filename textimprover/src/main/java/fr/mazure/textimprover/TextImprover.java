@@ -15,32 +15,6 @@ import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.service.AiServices;
 
 public class TextImprover {
-
-    public static final int SUCCESS = 0;
-    public static final int INVALID_COMMAND_LINE = 1;
-    public static final int FILE_ERROR = 2;
-    public static final int MODEL_ERROR = 3;
-
-    enum Provider {
-        HUGGING_FACE("HuggingFace"),
-        MISTRAL_AI("MistralAi");
-        final String name;
-        Provider(final String name) {
-            this.name = name;
-        }
-        @Override
-        public String toString() {
-            return this.name;
-        }
-        public static Provider fromString(String text) {
-            for (final Provider provider : Provider.values()) {
-                if (provider.name.equals(text)) {
-                    return provider;
-                }
-            }
-            throw new IllegalArgumentException("Unknown provider: " + text);
-        }
-    };
     
     interface Assistant {
         String chat(String userMessage);
@@ -55,7 +29,7 @@ public class TextImprover {
                 output = new PrintStream(Files.newOutputStream(parameters.outputFile().get(), StandardOpenOption.CREATE_NEW));
             } catch (final IOException e) {
                 System.err.println("Error: Unable to write output file: " + parameters.outputFile().get().toString());
-                System.exit(FILE_ERROR);
+                System.exit(ExitCode.FILE_ERROR.getCode());
             }
         }
 
@@ -65,7 +39,7 @@ public class TextImprover {
                 error = new PrintStream(Files.newOutputStream(parameters.errorFile().get(), StandardOpenOption.CREATE_NEW));
             } catch (final IOException e) {
                 System.err.println("Error: Unable to write error file: " + parameters.errorFile().get().toString());
-                System.exit(FILE_ERROR);
+                System.exit(ExitCode.FILE_ERROR.getCode());
             }
         }
 
@@ -112,7 +86,7 @@ public class TextImprover {
         } catch (final RuntimeException e) {
             error.println("Model failure");
             e.printStackTrace(error);
-            System.exit(MODEL_ERROR);
+            System.exit(ExitCode.MODEL_ERROR.getCode());
             return null;
         }
     }
