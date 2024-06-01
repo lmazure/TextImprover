@@ -11,7 +11,7 @@ import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatLanguageModel;
 import dev.langchain4j.model.huggingface.HuggingFaceChatModel;
-//import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.mistralai.MistralAiChatModel;
 import dev.langchain4j.service.AiServices;
 
 public class TextImprover {
@@ -20,6 +20,27 @@ public class TextImprover {
     public static final int INVALID_COMMAND_LINE = 1;
     public static final int FILE_ERROR = 2;
     public static final int MODEL_ERROR = 3;
+
+    enum Provider {
+        HUGGING_FACE("HuggingFace"),
+        MISTRAL_AI("MistralAi");
+        final String name;
+        Provider(final String name) {
+            this.name = name;
+        }
+        @Override
+        public String toString() {
+            return this.name;
+        }
+        public static Provider fromString(String text) {
+            for (final Provider provider : Provider.values()) {
+                if (provider.name.equals(text)) {
+                    return provider;
+                }
+            }
+            throw new IllegalArgumentException("Unknown provider: " + text);
+        }
+    };
     
     interface Assistant {
         String chat(String userMessage);
@@ -50,7 +71,7 @@ public class TextImprover {
 
         final Optional<SystemMessage> systemPrompt = parameters.sysPrompt().map(SystemMessage::new);
 
-        final String answerWithName = perform(systemPrompt, parameters.userPrompt(), error, parameters.model(), parameters.apiKey());
+        final String answerWithName = perform(systemPrompt, parameters.userPrompt(), error, parameters.provider(), parameters.model(), parameters.apiKey());
 
         output.println(answerWithName);
 
@@ -65,14 +86,16 @@ public class TextImprover {
     private static String perform(final Optional<SystemMessage> systemPrompt,
                                   final String message,
                                   final PrintStream error,
+                                  final Provider provider,
                                   final Optional<String> modelName,
                                   final Optional<String> apiKey) {
-        //final ChatLanguageModel model = OpenAiChatModel.withApiKey("demo");
-        final ChatLanguageModel model = HuggingFaceChatModel.builder()
-                                                            .accessToken(apiKey.get())
-                                                            .modelId(modelName.get())
-                                                            .maxNewTokens(1024)
-                                                            .build();
+
+        final ChatLanguageModel model =
+            switch (provider) {
+                case Provider.HUGGING_FACE -> buildHuggingFaceChatModel(modelName.get(), apiKey.get());
+                case Provider.MISTRAL_AI -> buildMistralAiChatModel(modelName.get(), apiKey.get());
+            };
+        
         final ChatMemory memory = MessageWindowChatMemory.withMaxMessages(2);
 
         if (systemPrompt.isPresent()) {
@@ -92,5 +115,22 @@ public class TextImprover {
             System.exit(MODEL_ERROR);
             return null;
         }
+    }
+
+    private static ChatLanguageModel buildHuggingFaceChatModel(final String modelName,
+                                                               final String apiKey) {
+        return HuggingFaceChatModel.builder()
+                                   .accessToken(apiKey)
+                                   .modelId(modelName)
+                                   .maxNewTokens(2048)
+                                   .build();
+    }
+
+    private static ChatLanguageModel buildMistralAiChatModel(final String modelName,
+                                                             final String apiKey) {
+        return MistralAiChatModel.builder()
+                                 .apiKey(apiKey)
+                                 .modelName(modelName)
+                                 .build();
     }
 }

@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class CommandLine {
     
@@ -13,6 +15,7 @@ public class CommandLine {
                              String userPrompt,
                              Optional<Path> outputFile,
                              Optional<Path> errorFile,
+                             TextImprover.Provider provider,
                              Optional<String> model,
                              Optional<String> apiKey) {}
 
@@ -21,6 +24,7 @@ public class CommandLine {
         String userPrompt = null;
         Path outputFile = null;
         Path errorFile = null;
+        TextImprover.Provider provider = null;
         String model = null;
         String apiKey = null;
         for (int i = 0; i < args.length; i++) {
@@ -94,6 +98,20 @@ public class CommandLine {
                 i++;
                 continue;
             }
+            if (args[i].equals("--provider")) {
+                if ((i + 1 ) >= args.length) {
+                    System.err.println("Missing argument for --provider");
+                    System.exit(TextImprover.INVALID_COMMAND_LINE);
+                }
+                try {
+                    provider = TextImprover.Provider.fromString(args[i + 1]);
+                } catch (final IllegalArgumentException e) {
+                    System.err.println("Unknown provider: " + args[i + 1]);
+                    displayHelpAndExit(1);
+                }
+                i++;
+                continue;
+            }
             if (args[i].equals("--model")) {
                 if ((i + 1 ) >= args.length) {
                     System.err.println("Missing argument for --model");
@@ -122,7 +140,11 @@ public class CommandLine {
             System.err.println("Missing user prompt");
             displayHelpAndExit(1);
         }
-        return new Parameters(Optional.ofNullable(sysPrompt), userPrompt, Optional.ofNullable(outputFile), Optional.ofNullable(errorFile), Optional.ofNullable(model), Optional.ofNullable(apiKey));
+        if (Objects.isNull(provider)) {
+            System.err.println("Missing provider");
+            displayHelpAndExit(1);
+        }
+        return new Parameters(Optional.ofNullable(sysPrompt), userPrompt, Optional.ofNullable(outputFile), Optional.ofNullable(errorFile), provider, Optional.ofNullable(model), Optional.ofNullable(apiKey));
     }
 
     private static void displayHelpAndExit(final int exitCode) {
@@ -140,11 +162,14 @@ public class CommandLine {
             --user-prompt-file <user-prompt-file>         user prompt as the content of a file
             --output-file output-file>                    output file (stdout by default)
             --error-file error-file>                      error file (stderr by default)
+            --provider <provider>                         provider
             --model <model>                               model name
             --api-key <api-key>                           api key
             --help
             """
         );
+        System.err.println("Available providers: " + Arrays.stream(TextImprover.Provider.values()).map(Enum::toString).collect(Collectors.joining(", ")));
+        // TODO add temperature, maxtokens, randomseed
         System.exit(exitCode);
     }
 
