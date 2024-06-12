@@ -15,7 +15,8 @@ public class CommandLine {
                              String userPrompt,
                              Optional<Path> outputFile,
                              Optional<Path> errorFile,
-                             Provider provider,
+                             ProviderEnum provider,
+                             Optional<String> project,
                              Optional<String> model,
                              Optional<String> apiKey,
                              Optional<Double> temperature,
@@ -26,7 +27,8 @@ public class CommandLine {
         String userPrompt = null;
         Path outputFile = null;
         Path errorFile = null;
-        Provider provider = null;
+        ProviderEnum provider = null;
+        String project = null;
         String model = null;
         String apiKey = null;
         Double temperature = null;
@@ -108,11 +110,20 @@ public class CommandLine {
                     System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
                 }
                 try {
-                    provider = Provider.fromString(args[i + 1]);
+                    provider = ProviderEnum.fromString(args[i + 1]);
                 } catch (final IllegalArgumentException e) {
                     System.err.println("Unknown provider: " + args[i + 1]);
                     displayHelpAndExit(1);
                 }
+                i++;
+                continue;
+            }
+            if (args[i].equals("--project")) {
+                if ((i + 1 ) >= args.length) {
+                    System.err.println("Missing argument for --project");
+                    System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
+                }
+                project = args[i + 1];
                 i++;
                 continue;
             }
@@ -181,6 +192,7 @@ public class CommandLine {
                               Optional.ofNullable(outputFile),
                               Optional.ofNullable(errorFile),
                               provider,
+                              Optional.ofNullable(project),
                               Optional.ofNullable(model),
                               Optional.ofNullable(apiKey),
                               Optional.ofNullable(temperature),
@@ -210,7 +222,7 @@ public class CommandLine {
             --help
             """
         );
-        System.err.println("Available providers: " + Arrays.stream(Provider.values()).map(Enum::toString).collect(Collectors.joining(", ")));
+        System.err.println("Available providers: " + Arrays.stream(ProviderEnum.values()).map(Enum::toString).collect(Collectors.joining(", ")));
         // TODO add temperature, maxtokens, randomseed
         System.exit(exitCode);
     }
