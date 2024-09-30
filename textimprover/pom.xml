@@ -17,7 +17,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>22</maven.compiler.source>
     <maven.compiler.target>22</maven.compiler.target>
-    <langchain4j.version>0.31.0</langchain4j.version>
+    <langchain4j.version>0.35.0</langchain4j.version>
   </properties>
 
   <dependencies>
