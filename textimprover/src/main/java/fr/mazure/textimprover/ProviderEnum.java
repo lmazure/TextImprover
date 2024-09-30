@@ -1,5 +1,7 @@
 package fr.mazure.textimprover;
 
+import java.util.Arrays;
+
 public enum ProviderEnum {
 
     HUGGING_FACE("HuggingFace"),
@@ -17,12 +19,10 @@ public enum ProviderEnum {
         return this.name;
     }
     
-    public static ProviderEnum fromString(String text) {
-        for (final ProviderEnum provider : ProviderEnum.values()) {
-            if (provider.name.equals(text)) {
-                return provider;
-            }
-        }
-        throw new IllegalArgumentException("Unknown provider: " + text);
+    public static ProviderEnum fromString(final String text) {
+        return Arrays.stream(ProviderEnum.values())
+                     .filter(p -> p.name.equals(text))
+                     .findFirst()
+                     .orElseThrow(() -> new IllegalArgumentException("Unknown provider: " + text));
     }
 }

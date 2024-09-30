@@ -174,7 +174,7 @@ public class CommandLine {
                 continue;
             }
             if (args[i].equals("--help")) {
-                System.exit(ExitCode.INVALID_COMMAND_LINE.getCode());
+                System.exit(ExitCode.SUCCESS.getCode());
             }
             System.err.println("Unknown argument: " + args[i]);
             displayHelpAndExit(1);
@@ -216,6 +216,7 @@ public class CommandLine {
             --error-file error-file>                      error file (stderr by default)
             --provider <provider>                         provider
             --model <model>                               model name
+            --project <project>                           project name
             --api-key <api-key>                           api key
             --temperature <temperature>                   temperature
             --seed <seed>                                 random seed
