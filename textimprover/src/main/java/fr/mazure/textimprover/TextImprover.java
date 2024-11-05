@@ -15,7 +15,7 @@ import dev.langchain4j.service.AiServices;
 public class TextImprover {
     
     interface Assistant {
-        String chat(String userMessage);
+        String chat(final String userMessage);
     }
 
     public static void main(final String[] args) {
@@ -43,7 +43,15 @@ public class TextImprover {
 
         final Optional<SystemMessage> systemPrompt = parameters.sysPrompt().map(SystemMessage::new);
 
-        final String answerWithName = perform(systemPrompt, parameters.userPrompt(), error, parameters.provider(), parameters.project(), parameters.model(), parameters.apiKey(), parameters.temperature(), parameters.seed());
+        final String answerWithName = perform(systemPrompt,
+                                              parameters.userPrompt(),
+                                              error,
+                                              parameters.provider(),
+                                              parameters.project(),
+                                              parameters.model(),
+                                              parameters.apiKey(),
+                                              parameters.temperature(),
+                                              parameters.seed());
 
         output.println(answerWithName);
 
