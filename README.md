@@ -13,7 +13,7 @@ java -jar target/textimprover-1.0-SNAPSHOT-jar-with-dependencies.jar --user-prom
 | `--system-prompt-file <system-prompt-file>`     | system prompt as the content of a file |
 | `--user-prompt-string <user-prompt-string>`     | user prompt as a string                |
 | `--user-prompt-file <user-prompt-file>`         | user prompt as the content of a file   |
-| `--output-file output-file>`                    | output file (stdout by default)        |
+| `--output-file <output-file>`                   | output file (stdout by default)        |
 | `--error-file error-file>`                      | error file (stderr by default)         |
 | `--provider <provider>`                         | provider                               |
 | `--model <model>`                               | model name                             |
